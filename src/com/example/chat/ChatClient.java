@@ -22,7 +22,7 @@ public class ChatClient {
             System.out.println("Unexpected exception: " + ioe.getMessage());
         }
         String line = "";
-        while (!line.equals(".bye")) {
+        while (!line.equals("bye")) {
             try {
                 line = reader.readLine();
                 streamOut.writeUTF(line);

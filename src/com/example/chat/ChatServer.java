@@ -6,9 +6,10 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class ChatServer {
-    private Socket socket = null;
+public class ChatServer implements Runnable{
+    private Socket       socket = null;
     private ServerSocket server = null;
+    private Thread       thread = null;
     private DataInputStream streamIn = null;
 
     public ChatServer(int port) {
@@ -16,25 +17,50 @@ public class ChatServer {
             System.out.println("Binding to port " + port + ", please wait ...");
             server = new ServerSocket(port);
             System.out.println("Server started: " + server);
-            System.out.println("Waiting for a client ...");
-            socket = server.accept();
-            System.out.println("Client accepted: " + socket);
-            open();
-            boolean done = false;
-            while (!done) {
-                try {
-                    String line = streamIn.readUTF();
-                    System.out.println(line);
-                    done = line.equals(".bye");
-                }
-                catch (IOException ioe) {
-                    done = true;
-                }
-            }
-            close();
+            start();
         }
         catch(IOException ioe) {
             System.out.println(ioe);
+        }
+    }
+
+    public void run() {
+        while (thread != null) {
+            try {
+                System.out.println("Waiting for a client ...");
+                socket = server.accept();
+                System.out.println("Client accepted: " + socket);
+                open();
+                boolean done = false;
+                while (!done) {
+                    try {
+                        String line = streamIn.readUTF();
+                        System.out.println(line);
+                        done = line.equals("bye");
+                    }
+                    catch (IOException ioe) {
+                        done = true;
+                    }
+                }
+                close();
+            }
+            catch (IOException ie) {
+                System.out.println("Acceptance Error: " + ie);
+            }
+        }
+    }
+
+    public void start() {
+        if (thread == null) {
+            thread = new Thread(this);
+            thread.start();
+        }
+    }
+
+    public void stop() {
+        if (thread != null) {
+            thread.stop();
+            thread = null;
         }
     }
 
